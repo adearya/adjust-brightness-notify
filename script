@@ -1,0 +1,36 @@
+#!/bin/bash
+
+BRIGHTNESS_FILE="/sys/class/backlight/intel_backlight/brightness"
+MAX_BRIGHTNESS=500  
+
+getValue() {
+  cat "$BRIGHTNESS_FILE"
+}
+
+setValue() {
+  echo "$1" | sudo tee "$BRIGHTNESS_FILE" > /dev/null
+}
+
+STEP=5  
+
+CURRENT_BRIGHTNESS=$(getValue)
+
+if [[ $1 == "inc" ]]; then
+  NEW_BRIGHTNESS=$((CURRENT_BRIGHTNESS + STEP))
+  if [[ $NEW_BRIGHTNESS -gt $MAX_BRIGHTNESS ]]; then
+    NEW_BRIGHTNESS=$MAX_BRIGHTNESS
+  fi
+elif [[ $1 == "dec" ]]; then
+  NEW_BRIGHTNESS=$((CURRENT_BRIGHTNESS - STEP))
+  if [[ $NEW_BRIGHTNESS -lt 0 ]]; then
+    NEW_BRIGHTNESS=0
+  fi
+else
+  exit 1
+fi
+
+setValue "$NEW_BRIGHTNESS"
+
+BRIGHTNESS_PERCENT=$((NEW_BRIGHTNESS * 100 / MAX_BRIGHTNESS))
+
+dunstify "Brightness" -h int:value:${BRIGHTNESS_PERCENT} -t 1500 
